@@ -16,5 +16,4 @@ const MENU = [
   { id: "cola",  name: "Cola",  emoji: "🥤" },
   { id: "fanta", name: "Fanta", emoji: "🍊" },
   { id: "water", name: "Water", emoji: "💧" },
-   { id: "koffie", name: "Koffie", emoji: "🥤" }, 
 ];
