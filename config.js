@@ -1,7 +1,10 @@
 /* ============================================================
-   CONFIGURATIE — Restaurant Cuppen
-   Dit is het enige bestand dat je normaal gesproken hoeft aan
-   te passen: je Firebase-gegevens en de kaart met dranken.
+   CONFIGURATIE — Restaurant
+   Dit bestand bevat alleen technische instellingen: de naam
+   van je zaak en je Firebase-gegevens.
+
+   Wil je de menukaart (dranken) aanpassen? Dat doe je in
+   products.js, niet hier.
    ============================================================ */
 
 // Naam van het restaurant, wordt boven de site getoond.
@@ -23,17 +26,3 @@ const firebaseConfig = {
   messagingSenderId: "466482374113",
   appId: "1:466482374113:web:8da1318ddd33ff40a51ea0"
 };
-
-/* ------------------------------------------------------------
-   MENUKAART
-   De dranken die gasten kunnen bestellen.
-   - id:    interne code, moet uniek zijn, geen spaties
-   - name:  naam zoals gasten die zien
-   - emoji: icoon op de kaart
-   Voeg hier gerust een regel toe om een nieuwe drank aan te bieden.
-   ------------------------------------------------------------ */
-const MENU = [
-  { id: "cola",  name: "Cola",  emoji: "🥤" },
-  { id: "fanta", name: "Fanta", emoji: "🍊" },
-  { id: "water", name: "Water", emoji: "💧" },
-];
