@@ -1,4 +1,4 @@
-/* ============================================================
+\/* ============================================================
    Restaurant Cuppen — Bestelsysteem
    Leest zijn instellingen (firebaseConfig, MENU, APP_NAME) uit config.js.
    Bewaar de volgorde van scripts in index.html: firebase SDK's,
