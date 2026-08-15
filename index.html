@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VUUR — Bestelsysteem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0c0a0e;
+    --bg-card: #18141a;
+    --bg-card-2: #211c25;
+    --line: #322b36;
+    --orange: #ff5024;
+    --pink: #ff2e7e;
+    --yellow: #ffcc33;
+    --text: #f6f0ea;
+    --text-dim: #a89ba3;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(255,80,36,0.10), transparent 45%),
+      radial-gradient(circle at 85% 100%, rgba(255,46,126,0.10), transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{ min-height:100vh; display:flex; flex-direction:column; }
+
+  .display{ font-family:'Anton', sans-serif; letter-spacing:0.02em; text-transform:uppercase; }
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 28px;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{ display:flex; align-items:baseline; gap:10px; cursor:pointer; }
+  .brand .flame{ font-size:22px; }
+  .brand h1{
+    font-family:'Anton', sans-serif;
+    font-size:26px;
+    letter-spacing:0.05em;
+    color:var(--yellow);
+    text-shadow:
+      0 0 6px rgba(255,204,51,0.9),
+      0 0 18px rgba(255,80,36,0.6),
+      0 0 34px rgba(255,46,126,0.35);
+    animation: flicker 6s infinite ease-in-out;
+  }
+  @keyframes flicker{
+    0%, 19%, 21%, 23%, 100%{ opacity:1; }
+    20%, 22%{ opacity:0.72; }
+    45%,55%{ opacity:0.92; }
+  }
+  .pill-nav{ display:flex; gap:8px; }
+  .pill-nav button{
+    background:transparent; border:1px solid var(--line); color:var(--text-dim);
+    font-family:'Space Grotesk'; font-weight:600; font-size:13px;
+    padding:8px 16px; border-radius:999px; cursor:pointer; letter-spacing:0.03em;
+    transition:all .15s ease;
+  }
+  .pill-nav button.active{ background:var(--orange); border-color:var(--orange); color:#180a05; }
+  .pill-nav button:hover{ border-color:var(--orange); color:var(--text); }
+
+  main{ flex:1; display:flex; flex-direction:column; }
+
+  /* ---------- HOME ---------- */
+  .home{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:40px 20px; text-align:center; gap:8px;
+  }
+  .home .eyebrow{
+    color:var(--pink); font-size:13px; font-weight:600; letter-spacing:0.25em; text-transform:uppercase; margin-bottom:6px;
+  }
+  .home h2{
+    font-family:'Anton'; font-size:clamp(42px, 9vw, 92px); line-height:0.95;
+    background:linear-gradient(120deg, var(--yellow), var(--orange) 55%, var(--pink));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    margin-bottom:6px;
+  }
+  .home p.sub{ color:var(--text-dim); font-size:16px; margin-bottom:44px; }
+  .choice-grid{
+    display:flex; gap:26px; flex-wrap:wrap; justify-content:center; width:100%; max-width:760px;
+  }
+  .choice-card{
+    flex:1 1 280px; max-width:340px;
+    background:var(--bg-card); border:1px solid var(--line); border-radius:18px;
+    padding:38px 26px; cursor:pointer; text-align:left; position:relative; overflow:hidden;
+    transition:transform .18s ease, border-color .18s ease;
+  }
+  .choice-card:hover{ transform:translateY(-4px); }
+  .choice-card::after{
+    content:''; position:absolute; inset:0; opacity:0; transition:opacity .18s ease;
+  }
+  .choice-card.order::after{ background:radial-gradient(circle at 100% 0%, rgba(255,80,36,0.18), transparent 60%); }
+  .choice-card.order:hover{ border-color:var(--orange); }
+  .choice-card.order:hover::after{ opacity:1; }
+  .choice-card.kitchen::after{ background:radial-gradient(circle at 100% 0%, rgba(255,46,126,0.18), transparent 60%); }
+  .choice-card.kitchen:hover{ border-color:var(--pink); }
+  .choice-card.kitchen:hover::after{ opacity:1; }
+  .choice-card .icon{ font-size:40px; display:block; margin-bottom:18px; }
+  .choice-card h3{ font-family:'Anton'; font-size:28px; letter-spacing:0.03em; margin-bottom:8px; position:relative; }
+  .choice-card p{ color:var(--text-dim); font-size:14px; line-height:1.5; position:relative; }
+  .choice-card .go{ margin-top:20px; font-size:13px; font-weight:700; letter-spacing:0.05em; position:relative; }
+  .choice-card.order .go{ color:var(--orange); }
+  .choice-card.kitchen .go{ color:var(--pink); }
+
+  /* ---------- BESTELLEN: drink grid ---------- */
+  .order-wrap{ flex:1; display:flex; flex-direction:column; align-items:center; padding:36px 20px 60px; }
+  .order-wrap .heading{ text-align:center; margin-bottom:34px; }
+  .order-wrap .heading .eyebrow{ color:var(--orange); font-size:12px; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; }
+  .order-wrap .heading h2{ font-family:'Anton'; font-size:clamp(30px,6vw,48px); margin-top:4px; }
+  .drink-grid{ display:flex; gap:22px; flex-wrap:wrap; justify-content:center; max-width:780px; width:100%; }
+  .drink-card{
+    width:190px; background:var(--bg-card); border:1px solid var(--line); border-radius:16px;
+    padding:28px 16px; text-align:center; cursor:pointer; transition:all .15s ease;
+  }
+  .drink-card:hover{ transform:translateY(-4px); border-color:var(--yellow); box-shadow:0 10px 30px rgba(0,0,0,0.35); }
+  .drink-card .emoji{ font-size:52px; display:block; margin-bottom:14px; }
+  .drink-card h4{ font-family:'Anton'; font-size:20px; letter-spacing:0.03em; }
+
+  /* ---------- BESTELLEN: detail ---------- */
+  .detail-card{
+    width:100%; max-width:440px; background:var(--bg-card); border:1px solid var(--line);
+    border-radius:20px; padding:34px 30px; margin-top:10px;
+  }
+  .back-link{
+    background:none; border:none; color:var(--text-dim); font-family:'Space Grotesk'; font-size:13px;
+    font-weight:600; cursor:pointer; margin-bottom:22px; display:inline-flex; align-items:center; gap:6px;
+  }
+  .back-link:hover{ color:var(--yellow); }
+  .detail-top{ display:flex; align-items:center; gap:16px; margin-bottom:28px; }
+  .detail-top .emoji{ font-size:48px; }
+  .detail-top h3{ font-family:'Anton'; font-size:30px; letter-spacing:0.03em; }
+  .field-label{ font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim); margin-bottom:10px; display:block; }
+  .stepper{ display:flex; align-items:center; gap:18px; margin-bottom:28px; }
+  .stepper button{
+    width:44px; height:44px; border-radius:12px; border:1px solid var(--line); background:var(--bg-card-2);
+    color:var(--text); font-size:20px; font-weight:700; cursor:pointer; transition:all .12s ease;
+  }
+  .stepper button:hover{ border-color:var(--orange); color:var(--orange); }
+  .stepper #amountDisplay{ font-family:'Anton'; font-size:32px; min-width:44px; text-align:center; }
+  textarea{
+    width:100%; background:var(--bg-card-2); border:1px solid var(--line); border-radius:12px;
+    color:var(--text); font-family:'Space Grotesk'; font-size:14px; padding:14px; resize:vertical;
+    min-height:80px; margin-bottom:28px;
+  }
+  textarea::placeholder{ color:#6f6470; }
+  textarea:focus, .drink-card:focus-visible, .choice-card:focus-visible, button:focus-visible{
+    outline:2px solid var(--yellow); outline-offset:2px;
+  }
+  .submit-btn{
+    width:100%; padding:16px; border-radius:12px; border:none; cursor:pointer;
+    background:linear-gradient(100deg, var(--orange), var(--pink));
+    color:#160a08; font-family:'Anton'; font-size:17px; letter-spacing:0.05em;
+    transition:filter .15s ease, transform .1s ease;
+  }
+  .submit-btn:hover{ filter:brightness(1.1); }
+  .submit-btn:active{ transform:scale(0.98); }
+  .submit-btn:disabled{ opacity:0.6; cursor:not-allowed; }
+
+  /* ---------- KEUKEN ---------- */
+  .kitchen-wrap{ flex:1; padding:30px 26px 60px; }
+  .kitchen-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-bottom:28px; }
+  .kitchen-head h2{ font-family:'Anton'; font-size:clamp(26px,5vw,38px); }
+  .live-badge{ display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:700; letter-spacing:0.1em; color:#8effb0; }
+  .live-badge.offline{ color:var(--pink); }
+  .live-dot{ width:8px; height:8px; border-radius:50%; background:#3ee06a; box-shadow:0 0 8px #3ee06a; animation:pulse 1.6s infinite; }
+  .live-badge.offline .live-dot{ background:var(--pink); box-shadow:0 0 8px var(--pink); }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+
+  .ticket-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:22px; }
+  .ticket{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:4px;
+    padding:22px 20px 20px; position:relative;
+    box-shadow:0 8px 22px rgba(0,0,0,0.3);
+  }
+  .ticket::before{
+    content:''; position:absolute; top:0; left:0; right:0; height:10px;
+    background-image: radial-gradient(circle 5px, var(--bg) 5px, transparent 6px);
+    background-size:20px 20px; background-position:0 -5px; background-repeat:repeat-x;
+  }
+  .ticket-num{ font-size:11px; font-weight:700; letter-spacing:0.1em; color:var(--text-dim); margin-top:6px; }
+  .ticket-main{ display:flex; align-items:center; gap:14px; margin:12px 0 14px; }
+  .ticket-main .emoji{ font-size:38px; }
+  .ticket-main h4{ font-family:'Anton'; font-size:22px; letter-spacing:0.02em; }
+  .ticket-main .qty{ font-family:'Anton'; font-size:22px; color:var(--yellow); margin-left:auto; }
+  .ticket-note{
+    background:var(--bg-card-2); border-left:3px solid var(--pink); border-radius:6px;
+    padding:10px 12px; font-size:13px; color:var(--text-dim); margin-bottom:16px; line-height:1.4;
+  }
+  .ticket-time{ font-size:11px; color:var(--text-dim); margin-bottom:14px; letter-spacing:0.03em; }
+  .done-btn{
+    width:100%; padding:12px; border-radius:8px; border:1px solid var(--line); background:transparent;
+    color:var(--text); font-family:'Space Grotesk'; font-weight:700; font-size:13px; letter-spacing:0.04em;
+    cursor:pointer; transition:all .15s ease;
+  }
+  .done-btn:hover{ background:#2ecf68; border-color:#2ecf68; color:#062b12; }
+
+  .empty-state{
+    text-align:center; padding:80px 20px; color:var(--text-dim);
+  }
+  .empty-state .emoji{ font-size:48px; display:block; margin-bottom:14px; }
+  .empty-state h4{ font-family:'Anton'; font-size:22px; color:var(--text); margin-bottom:6px; }
+
+  .config-warning{
+    max-width:560px; margin:0 auto; background:var(--bg-card-2); border:1px solid var(--pink);
+    border-radius:12px; padding:18px 20px; font-size:13px; line-height:1.6; color:var(--text-dim);
+  }
+  .config-warning b{ color:var(--text); }
+  .config-warning code{ color:var(--yellow); }
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--bg-card-2); border:1px solid var(--yellow); color:var(--text);
+    padding:14px 22px; border-radius:10px; font-size:14px; font-weight:600;
+    opacity:0; pointer-events:none; transition:all .25s ease; z-index:50; max-width:90vw; text-align:center;
+  }
+  #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  #toast.error{ border-color:var(--pink); }
+
+  @media (max-width:480px){
+    .topbar{ padding:14px 16px; }
+    .pill-nav button{ padding:7px 12px; font-size:12px; }
+    .detail-card{ padding:26px 20px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+
+<!-- Firebase SDK (compat build — geen build-tools nodig, werkt direct via GitHub Pages) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+  /* ============================================================
+     FIREBASE CONFIG — VUL HIER JE EIGEN GEGEVENS IN
+     Haal deze op in de Firebase Console > Project settings > Your apps > SDK setup and configuration.
+     Zorg dat je in de Firebase Console ook "Realtime Database" hebt aangemaakt
+     (niet Firestore) en de databaseURL hierin klopt.
+     ============================================================ */
+  const firebaseConfig = {
+    apiKey: "JOUW_API_KEY",
+    authDomain: "JOUW_PROJECT.firebaseapp.com",
+    databaseURL: "https://JOUW_PROJECT-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "JOUW_PROJECT",
+    storageBucket: "JOUW_PROJECT.appspot.com",
+    messagingSenderId: "000000000000",
+    appId: "1:000000000000:web:xxxxxxxxxxxxxxxxxxxxxx"
+  };
+
+  const CONFIG_IS_PLACEHOLDER = firebaseConfig.apiKey === "JOUW_API_KEY";
+
+  let db = null;
+  let ordersRef = null;
+  if(!CONFIG_IS_PLACEHOLDER){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    ordersRef = db.ref('orders');
+  }
+
+  const DRINKS = [
+    { id:'cola',  name:'Cola',  emoji:'🥤' },
+    { id:'fanta', name:'Fanta', emoji:'🍊' },
+    { id:'water', name:'Water', emoji:'💧' },
+  ];
+
+  const state = {
+    page: 'home',
+    selectedDrink: null,
+    amount: 1,
+    opmerking: '',
+    orders: [],
+    connected: false,
+  };
+
+  let kitchenListener = null;
+
+  function app(){ return document.getElementById('app'); }
+
+  function timeLabel(ts){
+    const d = new Date(ts);
+    return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+  }
+
+  function showToast(msg, isError){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = isError ? 'show error' : 'show';
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(()=>{ t.className = ''; }, 2600);
+  }
+
+  function stopKitchenListener(){
+    if(ordersRef && kitchenListener){
+      ordersRef.off('value', kitchenListener);
+      kitchenListener = null;
+    }
+  }
+
+  function goHome(){ stopKitchenListener(); state.page='home'; state.selectedDrink=null; render(); }
+  function goBestellen(){ stopKitchenListener(); state.page='bestellen'; state.selectedDrink=null; state.amount=1; state.opmerking=''; render(); }
+
+  function goKeuken(){
+    stopKitchenListener();
+    state.page = 'keuken';
+    render();
+    if(!ordersRef) return;
+
+    kitchenListener = ordersRef.on('value', snapshot => {
+      const val = snapshot.val() || {};
+      const orders = Object.keys(val)
+        .map(key => ({ ...val[key], id: key }))
+        .filter(o => o.status === 'pending')
+        .sort((a,b) => a.timestamp - b.timestamp);
+      state.orders = orders;
+      state.connected = true;
+      render();
+    }, err => {
+      state.connected = false;
+      showToast('Kon geen verbinding maken met de database', true);
+      render();
+    });
+  }
+
+  function selectDrink(id){
+    state.selectedDrink = DRINKS.find(d=>d.id===id);
+    state.amount = 1;
+    state.opmerking = '';
+    render();
+  }
+
+  function backToDrinks(){ state.selectedDrink = null; render(); }
+
+  function changeAmount(delta){
+    state.amount = Math.max(1, Math.min(20, state.amount + delta));
+    const el = document.getElementById('amountDisplay');
+    if(el) el.textContent = state.amount;
+  }
+
+  function onOpmerkingInput(el){ state.opmerking = el.value; }
+
+  async function submitOrder(){
+    if(!state.selectedDrink) return;
+    if(!ordersRef){
+      showToast('Firebase is nog niet ingesteld — vul firebaseConfig in', true);
+      return;
+    }
+    const btn = document.getElementById('submitBtn');
+    if(btn){ btn.disabled = true; btn.textContent = 'Versturen...'; }
+    const order = {
+      drinkId: state.selectedDrink.id,
+      drinkName: state.selectedDrink.name,
+      emoji: state.selectedDrink.emoji,
+      amount: state.amount,
+      opmerking: state.opmerking.trim(),
+      status: 'pending',
+      timestamp: Date.now(),
+    };
+    try{
+      await ordersRef.push(order);
+      showToast('Bestelling verzonden naar de keuken! 🔥');
+      state.selectedDrink = null;
+      state.amount = 1;
+      state.opmerking = '';
+      render();
+    }catch(e){
+      showToast('Kon bestelling niet verzenden, probeer opnieuw', true);
+      if(btn){ btn.disabled = false; btn.textContent = 'Bestelling verzenden'; }
+    }
+  }
+
+  async function markDone(orderId){
+    if(!db) return;
+    try{
+      await db.ref('orders/' + orderId).remove();
+    }catch(e){
+      showToast('Kon bestelling niet afronden, probeer opnieuw', true);
+    }
+  }
+
+  function topbar(){
+    return `
+      <div class="topbar">
+        <div class="brand" onclick="goHome()" role="button" tabindex="0">
+          <span class="flame">🔥</span><h1>VUUR</h1>
+        </div>
+        <div class="pill-nav">
+          <button class="${state.page==='bestellen'?'active':''}" onclick="goBestellen()">Bestellen</button>
+          <button class="${state.page==='keuken'?'active':''}" onclick="goKeuken()">Keuken</button>
+        </div>
+      </div>`;
+  }
+
+  function configWarning(){
+    if(!CONFIG_IS_PLACEHOLDER) return '';
+    return `
+      <div class="config-warning">
+        <b>Firebase nog niet gekoppeld.</b><br>
+        Vul bovenin de code (<code>firebaseConfig</code>) je eigen Firebase-project­gegevens in en zorg dat
+        <b>Realtime Database</b> is aangemaakt in de Firebase Console, anders werkt bestellen/keuken niet.
+      </div>`;
+  }
+
+  function renderHome(){
+    return `
+      ${topbar()}
+      <main>
+        <div class="home">
+          <div class="eyebrow">Welkom bij</div>
+          <h2 class="display">VUUR</h2>
+          <p class="sub">Kies waar je naartoe wilt</p>
+          <div class="choice-grid">
+            <div class="choice-card order" onclick="goBestellen()" role="button" tabindex="0">
+              <span class="icon">🍹</span>
+              <h3>Bestellen</h3>
+              <p>Kies een drankje, geef een hoeveelheid en een opmerking door.</p>
+              <div class="go">Ga bestellen →</div>
+            </div>
+            <div class="choice-card kitchen" onclick="goKeuken()" role="button" tabindex="0">
+              <span class="icon">🍳</span>
+              <h3>Keuken</h3>
+              <p>Bekijk live binnenkomende bestellingen en vink ze af.</p>
+              <div class="go">Open keuken →</div>
+            </div>
+          </div>
+          ${CONFIG_IS_PLACEHOLDER ? `<div style="margin-top:36px;">${configWarning()}</div>` : ''}
+        </div>
+      </main>`;
+  }
+
+  function renderBestellen(){
+    if(!state.selectedDrink){
+      return `
+        ${topbar()}
+        <main>
+          <div class="order-wrap">
+            <div class="heading">
+              <div class="eyebrow">Stap 1</div>
+              <h2 class="display">Kies je drankje</h2>
+            </div>
+            <div class="drink-grid">
+              ${DRINKS.map(d => `
+                <div class="drink-card" onclick="selectDrink('${d.id}')" role="button" tabindex="0">
+                  <span class="emoji">${d.emoji}</span>
+                  <h4>${d.name}</h4>
+                </div>`).join('')}
+            </div>
+          </div>
+        </main>`;
+    }
+    const d = state.selectedDrink;
+    return `
+      ${topbar()}
+      <main>
+        <div class="order-wrap">
+          <div class="detail-card">
+            <button class="back-link" onclick="backToDrinks()">← Ander drankje</button>
+            <div class="detail-top">
+              <span class="emoji">${d.emoji}</span>
+              <h3>${d.name}</h3>
+            </div>
+            <span class="field-label">Hoeveelheid</span>
+            <div class="stepper">
+              <button onclick="changeAmount(-1)" aria-label="Minder">−</button>
+              <span id="amountDisplay">${state.amount}</span>
+              <button onclick="changeAmount(1)" aria-label="Meer">+</button>
+            </div>
+            <span class="field-label">Opmerking (optioneel)</span>
+            <textarea placeholder="bv. extra ijs, geen rietje..." oninput="onOpmerkingInput(this)">${state.opmerking}</textarea>
+            <button id="submitBtn" class="submit-btn" onclick="submitOrder()">Bestelling verzenden</button>
+          </div>
+        </div>
+      </main>`;
+  }
+
+  function renderKeuken(){
+    const orders = state.orders;
+    return `
+      ${topbar()}
+      <main>
+        <div class="kitchen-wrap">
+          <div class="kitchen-head">
+            <h2 class="display">Keuken</h2>
+            <span class="live-badge ${state.connected ? '' : 'offline'}">
+              <span class="live-dot"></span>${state.connected ? 'LIVE — ' + orders.length + ' openstaand' : 'NIET VERBONDEN'}
+            </span>
+          </div>
+          ${CONFIG_IS_PLACEHOLDER ? configWarning() : (orders.length === 0 ? `
+            <div class="empty-state">
+              <span class="emoji">☕</span>
+              <h4>Geen bestellingen</h4>
+              <p>Zodra er iets binnenkomt, verschijnt het hier automatisch.</p>
+            </div>` : `
+            <div class="ticket-grid">
+              ${orders.map(o => `
+                <div class="ticket">
+                  <div class="ticket-num">#${o.id.slice(-5).toUpperCase()}</div>
+                  <div class="ticket-main">
+                    <span class="emoji">${o.emoji}</span>
+                    <h4>${o.drinkName}</h4>
+                    <span class="qty">×${o.amount}</span>
+                  </div>
+                  ${o.opmerking ? `<div class="ticket-note">"${escapeHtml(o.opmerking)}"</div>` : ''}
+                  <div class="ticket-time">Besteld om ${timeLabel(o.timestamp)}</div>
+                  <button class="done-btn" onclick="markDone('${o.id}')">✓ Bestelling gemaakt</button>
+                </div>`).join('')}
+            </div>`)}
+        </div>
+      </main>`;
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function render(){
+    if(state.page === 'home') app().innerHTML = renderHome();
+    else if(state.page === 'bestellen') app().innerHTML = renderBestellen();
+    else if(state.page === 'keuken') app().innerHTML = renderKeuken();
+  }
+
+  render();
+</script>
+</body>
+</html>
