@@ -10,17 +10,20 @@
    ============================================================ */
 
 const state = {
-  page: 'home',          // 'home' | 'bestellen' | 'keuken'
+  page: 'home',          // 'home' | 'bestellen' | 'keuken' | 'voorraad'
   cart: {},              // { drinkId: aantal }
   orderOpmerking: '',
   showReady: false,      // toont/verbergt "Bereide bestellingen" paneel
   kitchenOrders: [],     // alle actieve bestellingen, voor de keukenpagina
   readyOrders: [],       // bestellingen met status 'klaar', voor de bestelpagina
   connected: false,
+  stock: {},             // { productId: true } — aanwezig én true betekent: uitverkocht
+  stockConnected: false,
 };
 
 let kitchenListener = null;
 let readyListener = null;
+let stockListener = null;
 let db = null;
 let ordersRef = null;
 let CONFIG_IS_PLACEHOLDER = true;
@@ -31,7 +34,7 @@ let firebaseInitError = null;
    config.js de rest van de site niet met zich meesleurt: de
    pagina's blijven altijd zichtbaar, met een duidelijke melding. */
 try{
-  CONFIG_IS_PLACEHOLDER = (typeof firebaseConfig === 'undefined') || firebaseConfig.apiKey === "AIzaSyDIlcs1YlMrcR2_Tzl1sSKTxQd9hWUZr6s";
+  CONFIG_IS_PLACEHOLDER = (typeof firebaseConfig === 'undefined') || firebaseConfig.apiKey === "JOUW_API_KEY";
   if(!CONFIG_IS_PLACEHOLDER){
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
@@ -72,6 +75,45 @@ function pulseElement(id){
   el.classList.add('pulse');
 }
 
+/* ---------------- voorraad ---------------- */
+
+function isSoldOut(id){ return !!state.stock[id]; }
+
+function categorize(list){
+  const groups = CATEGORIES.map(cat => ({
+    id: cat.id,
+    label: cat.label,
+    items: list.filter(p => p.category === cat.id),
+  }));
+  const known = new Set(CATEGORIES.map(c => c.id));
+  const overig = list.filter(p => !known.has(p.category));
+  if(overig.length){ groups.push({ id: 'overig', label: 'Overig', items: overig }); }
+  return groups.filter(g => g.items.length > 0);
+}
+
+function startStockListener(){
+  if(!db || stockListener) return;
+  stockListener = db.ref('stock').on('value', snapshot => {
+    state.stock = snapshot.val() || {};
+    state.stockConnected = true;
+    if(state.page === 'bestellen' || state.page === 'voorraad') render();
+  }, () => {
+    state.stockConnected = false;
+    if(state.page === 'voorraad') render();
+  });
+}
+
+async function toggleStock(id){
+  if(!db) return;
+  const soldOut = isSoldOut(id);
+  try{
+    if(soldOut) await db.ref('stock/' + id).remove();
+    else await db.ref('stock/' + id).set(true);
+  }catch(e){
+    showToast('Kon voorraad niet bijwerken, probeer opnieuw', true);
+  }
+}
+
 /* ---------------- navigatie ---------------- */
 
 function stopListeners(){
@@ -92,6 +134,7 @@ function goBestellen(){
   state.orderOpmerking = '';
   state.showReady = false;
   render();
+  startStockListener();
   if(!ordersRef) return;
 
   readyListener = ordersRef.on('value', snapshot => {
@@ -106,6 +149,13 @@ function goBestellen(){
     state.connected = false;
     render();
   });
+}
+
+function goVoorraad(){
+  stopListeners();
+  state.page = 'voorraad';
+  render();
+  startStockListener();
 }
 
 function goKeuken(){
@@ -142,6 +192,10 @@ function cartItems(){
 }
 
 function addToCart(id, delta){
+  if(delta > 0 && isSoldOut(id)){
+    showToast('Dit product is uitverkocht', true);
+    return;
+  }
   const current = state.cart[id] || 0;
   const next = Math.max(0, Math.min(20, current + delta));
   if(next === 0) delete state.cart[id];
@@ -240,6 +294,7 @@ function topbar(){
       <div class="pill-nav">
         <button class="${state.page==='bestellen'?'active':''}" onclick="goBestellen()">Bestellen</button>
         <button class="${state.page==='keuken'?'active':''}" onclick="goKeuken()">Keuken</button>
+        <button class="${state.page==='voorraad'?'active':''}" onclick="goVoorraad()">Voorraad</button>
       </div>
     </div>`;
 }
@@ -289,6 +344,12 @@ function renderHome(){
             <h3>Keuken</h3>
             <p>Bekijk binnenkomende bestellingen live en werk de status bij.</p>
             <div class="go">Open keuken →</div>
+          </div>
+          <div class="choice-card shimmer" onclick="goVoorraad()" role="button" tabindex="0">
+            <span class="icon">📦</span>
+            <h3>Voorraad</h3>
+            <p>Zet producten op uitverkocht zodra ze op zijn — gasten zien dat meteen op de kaart.</p>
+            <div class="go">Beheer voorraad →</div>
           </div>
         </div>
         ${configWarning()}
@@ -343,16 +404,25 @@ function renderBestellen(){
         ${renderReadyPanel()}
 
         <div class="menu-list">
-          ${MENU.map(d => `
-            <div class="menu-row">
-              <span class="emoji">${d.emoji}</span>
-              <span class="name serif">${escapeHtml(d.name)}</span>
-              <span class="leader"></span>
-              <div class="row-stepper">
-                <button onclick="addToCart('${d.id}', -1)" ${!(state.cart[d.id]) ? 'disabled' : ''} aria-label="Minder">−</button>
-                <span class="rs-qty">${state.cart[d.id] || 0}</span>
-                <button onclick="addToCart('${d.id}', 1)" aria-label="Meer">+</button>
-              </div>
+          ${categorize(MENU).map(group => `
+            <div class="menu-category">
+              <div class="menu-category-title"><span class="cline"></span><span class="label">${escapeHtml(group.label)}</span><span class="cline"></span></div>
+              ${group.items.map(d => {
+                const soldOut = isSoldOut(d.id);
+                return `
+                <div class="menu-row ${soldOut ? 'sold-out' : ''}">
+                  <span class="emoji">${d.emoji}</span>
+                  <span class="name serif">${escapeHtml(d.name)}</span>
+                  <span class="leader"></span>
+                  ${soldOut
+                    ? `<span class="sold-out-badge">Uitverkocht</span>`
+                    : `<div class="row-stepper">
+                        <button onclick="addToCart('${d.id}', -1)" ${!(state.cart[d.id]) ? 'disabled' : ''} aria-label="Minder">−</button>
+                        <span class="rs-qty">${state.cart[d.id] || 0}</span>
+                        <button onclick="addToCart('${d.id}', 1)" aria-label="Meer">+</button>
+                      </div>`}
+                </div>`;
+              }).join('')}
             </div>`).join('')}
         </div>
 
@@ -446,6 +516,44 @@ function renderKeuken(){
     </main>`;
 }
 
+/* ---------------- render: voorraad ---------------- */
+
+function renderVoorraad(){
+  return `
+    ${topbar()}
+    <main>
+      <div class="stock-wrap">
+        <div class="heading">
+          <div class="eyebrow">Beheer</div>
+          <h2 class="serif">Voorraad</h2>
+        </div>
+        ${ornament()}
+        <span class="live-badge ${state.stockConnected ? '' : 'offline'}" style="margin-bottom:28px;">
+          <span class="live-dot"></span>${state.stockConnected ? 'LIVE VERBONDEN' : 'NIET VERBONDEN'}
+        </span>
+        ${(CONFIG_IS_PLACEHOLDER || firebaseInitError) ? configWarning() : `
+          <div class="stock-list">
+            ${categorize(MENU).map(group => `
+              <div class="menu-category">
+                <div class="menu-category-title"><span class="cline"></span><span class="label">${escapeHtml(group.label)}</span><span class="cline"></span></div>
+                ${group.items.map(d => {
+                  const soldOut = isSoldOut(d.id);
+                  return `
+                  <div class="stock-row ${soldOut ? 'sold-out' : ''}">
+                    <span class="emoji">${d.emoji}</span>
+                    <span class="name">${escapeHtml(d.name)}</span>
+                    <button class="stock-toggle ${soldOut ? 'is-sold-out' : ''}" onclick="toggleStock('${d.id}')">
+                      ${soldOut ? '✕ Uitverkocht' : '✓ Beschikbaar'}
+                    </button>
+                  </div>`;
+                }).join('')}
+              </div>`).join('')}
+          </div>
+          <p class="kitchen-hint">Klik op een product om het meteen als uitverkocht te markeren of weer beschikbaar te maken. Gasten zien dit direct op de bestelpagina.</p>`}
+      </div>
+    </main>`;
+}
+
 /* ---------------- render ---------------- */
 
 function render(){
@@ -454,6 +562,7 @@ function render(){
     if(state.page === 'home') html = renderHome();
     else if(state.page === 'bestellen') html = renderBestellen();
     else if(state.page === 'keuken') html = renderKeuken();
+    else if(state.page === 'voorraad') html = renderVoorraad();
     app().innerHTML = `<div class="page-fade">${html}</div>`;
   }catch(e){
     console.error('Renderfout:', e);
