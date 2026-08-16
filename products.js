@@ -11,15 +11,16 @@
    Voeg een regel toe (of verwijder er een) om het aanbod te
    wijzigen — de rest van de site werkt dit automatisch bij.
    De VOLGORDE van CATEGORIES hieronder bepaalt de volgorde van de
-   kopjes op de bestel- en voorraadpagina (nu: Vlaai, Dranken,
-   Bier & Wijn). Binnen een categorie bepaalt de volgorde in MENU
-   de volgorde op de kaart.
+   kopjes op de bestel- en voorraadpagina (nu: Vlaai, Warme Dranken,
+   Dranken, Bier & Wijn). Binnen een categorie bepaalt de volgorde
+   in MENU de volgorde op de kaart.
    ============================================================ */
 
 const CATEGORIES = [
-  { id: "vlaai",     label: "Vlaai" },
-  { id: "drank",     label: "Dranken" },
-  { id: "bier_wijn", label: "Bier & Wijn" },
+  { id: "vlaai",       label: "Vlaai" },
+  { id: "warme_drank", label: "Warme Dranken" },
+  { id: "fris",       label: "Frisdrank" },
+  { id: "bier_wijn",   label: "Bier & Wijn" },
 ];
 
 const MENU = [
@@ -30,13 +31,15 @@ const MENU = [
   { id: "rijstenvlaai",   name: "Rijstenvlaai",      emoji: "🍰", category: "vlaai" },
   { id: "kersenvlaai",    name: "Kersenvlaai",       emoji: "🍰", category: "vlaai" },
 
+  // --- Warme Dranken ---
+  { id: "koffie",         name: "Koffie",            emoji: "☕", category: "warme_drank" },
+  { id: "thee",           name: "Thee",              emoji: "☕", category: "warme_drank" },
+  { id: "cappuccino",     name: "Cappuccino",        emoji: "☕", category: "warme_drank" },
+
   // --- Dranken ---
   { id: "cola",           name: "Cola",              emoji: "🥤", category: "drank" },
   { id: "fanta",          name: "Fanta",             emoji: "🍊", category: "drank" },
   { id: "water",          name: "Water",             emoji: "💧", category: "drank" },
-  { id: "koffie",         name: "Koffie",            emoji: "☕", category: "drank" },
-  { id: "thee",           name: "Thee",              emoji: "☕", category: "drank" },
-  { id: "cappuccino",     name: "Cappuccino",        emoji: "☕", category: "drank" },
   { id: "sparood",        name: "Spa Rood",          emoji: "💧", category: "drank" },
   { id: "iceteag",        name: "Ice Tea Green",     emoji: "🥤", category: "drank" },
   { id: "iceteas",        name: "Ice Tea Sparkling", emoji: "🥤", category: "drank" },
