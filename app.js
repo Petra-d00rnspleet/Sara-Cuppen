@@ -8,7 +8,7 @@
    nieuw -> bereiding -> klaar -> (verwijderd zodra "bezorgd" is aangevinkt)
    ============================================================ */
 
-const CONFIG_IS_PLACEHOLDER = firebaseConfig.apiKey === "JOUW_API_KEY";
+const CONFIG_IS_PLACEHOLDER = firebaseConfig.apiKey === "AIzaSyDIlcs1YlMrcR2_Tzl1sSKTxQd9hWUZr6s";
 
 let db = null;
 let ordersRef = null;
