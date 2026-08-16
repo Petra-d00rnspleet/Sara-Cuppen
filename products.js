@@ -1,15 +1,14 @@
 /* ============================================================
-   MENUKAART — Restaurant
-   De dranken die gasten kunnen bestellen. Dit is het bestand
-   dat je aanpast om het assortiment te wijzigen.
+   MENUKAART — Restaurant Cuppen
+   Beheer hier de dranken die gasten kunnen bestellen.
 
    - id:    interne code, moet uniek zijn, geen spaties
    - name:  naam zoals gasten die zien
    - emoji: icoon op de kaart
 
-   Voeg gerust een regel toe (of verwijder er een) om het
-   aanbod te wijzigen — de rest van de app werkt dit
-   automatisch bij.
+   Voeg een regel toe (of verwijder er een) om het aanbod te
+   wijzigen — de rest van de site werkt dit automatisch bij.
+   Volgorde in deze lijst = volgorde op de bestelpagina.
    ============================================================ */
 
 const MENU = [
