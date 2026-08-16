@@ -12,14 +12,14 @@
    wijzigen — de rest van de site werkt dit automatisch bij.
    De VOLGORDE van CATEGORIES hieronder bepaalt de volgorde van de
    kopjes op de bestel- en voorraadpagina (nu: Vlaai, Warme Dranken,
-   Dranken, Bier & Wijn). Binnen een categorie bepaalt de volgorde
+   Frisdrank, Bier & Wijn). Binnen een categorie bepaalt de volgorde
    in MENU de volgorde op de kaart.
    ============================================================ */
 
 const CATEGORIES = [
   { id: "vlaai",       label: "Vlaai" },
   { id: "warme_drank", label: "Warme Dranken" },
-  { id: "fris",       label: "Frisdrank" },
+  { id: "drank",       label: "Frisdrank" },
   { id: "bier_wijn",   label: "Bier & Wijn" },
 ];
 
