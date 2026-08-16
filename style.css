@@ -131,9 +131,9 @@ main{ flex:1; display:flex; flex-direction:column; }
 }
 .home p.sub{ color:var(--text-dim); font-size:15px; margin-bottom:48px; font-family:'Fraunces'; font-style:italic; }
 
-.choice-grid{ display:flex; gap:24px; flex-wrap:wrap; justify-content:center; width:100%; max-width:740px; }
+.choice-grid{ display:flex; gap:24px; flex-wrap:wrap; justify-content:center; width:100%; max-width:980px; }
 .choice-card{
-  flex:1 1 280px; max-width:340px;
+  flex:1 1 260px; max-width:310px;
   background:linear-gradient(155deg, var(--bg-elev), var(--bg-elev-2));
   border:1px solid var(--line); border-radius:3px;
   padding:36px 28px; cursor:pointer; text-align:left; position:relative;
@@ -185,11 +185,28 @@ main{ flex:1; display:flex; flex-direction:column; }
 .ready-empty{ text-align:center; padding:20px; color:var(--text-dim); font-size:13px; border:1px dashed var(--line); border-radius:3px; }
 
 .menu-list{ width:100%; max-width:520px; border-top:1px solid var(--line); }
+
+.menu-category{ width:100%; }
+.menu-category-title{ display:flex; align-items:center; gap:12px; margin:30px 0 6px; }
+.menu-category:first-child .menu-category-title{ margin-top:22px; }
+.menu-category-title .cline{ flex:1; height:1px; background:var(--line); }
+.menu-category-title .label{
+  font-family:'Fraunces', serif; font-style:italic; font-weight:600; font-size:13px;
+  letter-spacing:0.05em; color:var(--copper-soft); white-space:nowrap;
+}
+
 .menu-row{
   display:flex; align-items:center; gap:14px; padding:18px 6px;
-  border-bottom:1px solid var(--line); transition:background .15s ease;
+  border-bottom:1px solid var(--line); transition:background .15s ease, opacity .15s ease;
 }
 .menu-row:hover{ background:var(--bg-elev); }
+.menu-row.sold-out{ opacity:0.42; }
+.menu-row.sold-out:hover{ background:transparent; }
+.menu-row.sold-out .name{ text-decoration:line-through; text-decoration-color:var(--wine-soft); }
+.sold-out-badge{
+  flex-shrink:0; font-size:10.5px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--wine-soft); border:1px solid var(--wine-soft); border-radius:999px; padding:5px 12px;
+}
 .menu-row .emoji{ font-size:24px; width:32px; text-align:center; flex-shrink:0; }
 .menu-row .name{ font-family:'Fraunces', serif; font-size:18px; font-weight:600; color:var(--cream); white-space:nowrap; }
 .menu-row .leader{ flex:1; border-bottom:1px dotted var(--line); height:1px; margin:0 4px; transform:translateY(-4px); }
@@ -305,6 +322,26 @@ textarea:focus, .menu-row button:focus-visible, .choice-card:focus-visible, butt
 .empty-col{ text-align:center; padding:34px 14px; color:var(--text-dim); border:1px dashed var(--line); border-radius:2px; font-size:13px; }
 
 .kitchen-hint{ margin-top:30px; font-size:12px; color:var(--text-dim); line-height:1.6; }
+
+/* ---------- VOORRAAD ---------- */
+.stock-wrap{ flex:1; display:flex; flex-direction:column; align-items:center; padding:44px 20px 70px; }
+.stock-list{ width:100%; max-width:560px; }
+.stock-row{
+  display:flex; align-items:center; gap:14px; padding:15px 6px;
+  border-bottom:1px solid var(--line); transition:opacity .15s ease;
+}
+.stock-row .emoji{ font-size:22px; width:30px; text-align:center; flex-shrink:0; }
+.stock-row .name{ flex:1; font-family:'Fraunces', serif; font-weight:600; font-size:16px; color:var(--cream); }
+.stock-row.sold-out{ opacity:0.62; }
+.stock-row.sold-out .name{ text-decoration:line-through; text-decoration-color:var(--wine-soft); color:var(--text-dim); }
+.stock-toggle{
+  flex-shrink:0; padding:9px 16px; border-radius:999px; font-family:'Inter'; font-size:11.5px; font-weight:700;
+  letter-spacing:0.05em; text-transform:uppercase; cursor:pointer; transition:all .15s ease;
+  border:1px solid var(--green-ok); color:var(--green-ok); background:transparent;
+}
+.stock-toggle:hover{ background:var(--green-ok); color:#0e1508; }
+.stock-toggle.is-sold-out{ border-color:var(--wine-soft); color:var(--wine-soft); }
+.stock-toggle.is-sold-out:hover{ background:var(--wine-soft); color:#1a0a0c; }
 
 .config-warning{
   max-width:560px; margin:24px auto 0; background:var(--bg-elev-2); border:1px solid var(--wine-soft);
