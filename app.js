@@ -1,22 +1,13 @@
 /* ============================================================
    Restaurant Cuppen — Bestelsysteem
-   Leest zijn instellingen (firebaseConfig, MENU, APP_NAME) uit config.js.
-   Bewaar de volgorde van scripts in index.html: firebase SDK's,
-   dan config.js, dan dit bestand.
+   Dit bestand hoef je nooit aan te passen. Alle instellingen
+   komen uit config.js (naam, Firebase) en products.js (menukaart).
+   Bewaar de scriptvolgorde in index.html:
+   firebase SDK's -> config.js -> products.js -> dit bestand.
 
    Status van een bestelling doorloopt:
    nieuw -> bereiding -> klaar -> (verwijderd zodra "bezorgd" is aangevinkt)
    ============================================================ */
-
-const CONFIG_IS_PLACEHOLDER = firebaseConfig.apiKey === "AIzaSyDIlcs1YlMrcR2_Tzl1sSKTxQd9hWUZr6s";
-
-let db = null;
-let ordersRef = null;
-if (!CONFIG_IS_PLACEHOLDER) {
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.database();
-  ordersRef = db.ref('orders');
-}
 
 const state = {
   page: 'home',          // 'home' | 'bestellen' | 'keuken'
@@ -30,6 +21,26 @@ const state = {
 
 let kitchenListener = null;
 let readyListener = null;
+let db = null;
+let ordersRef = null;
+let CONFIG_IS_PLACEHOLDER = true;
+let firebaseInitError = null;
+
+/* ---------------- Firebase koppelen ----------------
+   Dit staat in een try/catch zodat een verkeerde of ontbrekende
+   config.js de rest van de site niet met zich meesleurt: de
+   pagina's blijven altijd zichtbaar, met een duidelijke melding. */
+try{
+  CONFIG_IS_PLACEHOLDER = (typeof firebaseConfig === 'undefined') || firebaseConfig.apiKey === "JOUW_API_KEY";
+  if(!CONFIG_IS_PLACEHOLDER){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    ordersRef = db.ref('orders');
+  }
+}catch(e){
+  firebaseInitError = e;
+  console.error('Firebase kon niet worden gestart:', e);
+}
 
 function app(){ return document.getElementById('app'); }
 
@@ -40,6 +51,7 @@ function timeLabel(ts){
 
 function showToast(msg, isError){
   const t = document.getElementById('toast');
+  if(!t) return;
   t.textContent = msg;
   t.className = isError ? 'show error' : 'show';
   clearTimeout(showToast._timer);
@@ -153,7 +165,7 @@ function toggleReadyPanel(){
 async function submitOrder(){
   if(cartCount() === 0) return;
   if(!ordersRef){
-    showToast('Firebase is nog niet ingesteld — vul config.js in', true);
+    showToast('Firebase is nog niet ingesteld — controleer config.js', true);
     return;
   }
   const btn = document.getElementById('submitBtn');
@@ -221,7 +233,7 @@ function topbar(){
       <div class="brand" onclick="goHome()" role="button" tabindex="0">
         <span class="badge">C</span>
         <div class="brand-text">
-          <h1>${APP_NAME}</h1>
+          <h1>${escapeHtml(APP_NAME)}</h1>
           <span class="brand-sub">Restaurant</span>
         </div>
       </div>
@@ -237,6 +249,14 @@ function ornament(){
 }
 
 function configWarning(){
+  if(firebaseInitError){
+    return `
+      <div class="config-warning">
+        <b>Firebase kon niet worden gestart.</b><br>
+        Controleer de gegevens in <code>config.js</code>.<br>
+        Foutmelding: <code>${escapeHtml(firebaseInitError.message || String(firebaseInitError))}</code>
+      </div>`;
+  }
   if(!CONFIG_IS_PLACEHOLDER) return '';
   return `
     <div class="config-warning">
@@ -254,7 +274,7 @@ function renderHome(){
     <main>
       <div class="home">
         <div class="eyebrow">Welkom bij</div>
-        <h2 class="serif">${APP_NAME}</h2>
+        <h2 class="serif">${escapeHtml(APP_NAME)}</h2>
         ${ornament()}
         <p class="sub">Waar wilt u naartoe?</p>
         <div class="choice-grid">
@@ -326,7 +346,7 @@ function renderBestellen(){
           ${MENU.map(d => `
             <div class="menu-row">
               <span class="emoji">${d.emoji}</span>
-              <span class="name serif">${d.name}</span>
+              <span class="name serif">${escapeHtml(d.name)}</span>
               <span class="leader"></span>
               <div class="row-stepper">
                 <button onclick="addToCart('${d.id}', -1)" ${!(state.cart[d.id]) ? 'disabled' : ''} aria-label="Minder">−</button>
@@ -342,13 +362,13 @@ function renderBestellen(){
             <div class="cart-items">
               ${items.map(it => `
                 <div class="cart-item">
-                  <span class="ci-name">${it.emoji} ${it.drinkName}</span>
+                  <span class="ci-name">${it.emoji} ${escapeHtml(it.drinkName)}</span>
                   <span class="ci-qty">×${it.amount}</span>
                   <button class="ci-remove" onclick="removeFromCart('${it.drinkId}')" aria-label="Verwijderen">✕</button>
                 </div>`).join('')}
             </div>
             <span class="field-label">Opmerking (optioneel)</span>
-            <textarea placeholder="bv. extra ijs, geen rietje..." oninput="onOpmerkingInput(this)">${state.orderOpmerking}</textarea>
+            <textarea placeholder="bv. extra ijs, geen rietje..." oninput="onOpmerkingInput(this)">${escapeHtml(state.orderOpmerking)}</textarea>
             <button id="submitBtn" class="submit-btn shimmer" onclick="submitOrder()">Bestelling verzenden (${count})</button>
           </div>` : ''}
 
@@ -363,15 +383,14 @@ function ticketHtml(o, kind){
   const btn = kind === 'nieuw'
     ? `<button class="ticket-btn start shimmer" onclick="startBereiden('${o.id}')">Start bereiden →</button>`
     : `<button class="ticket-btn finish" onclick="markReady('${o.id}')">✓ Klaar</button>`;
-  const itemsHtml = o.items.map(it => `
+  const itemsHtml = (o.items || []).map(it => `
     <div class="ticket-item-row">
       <span class="emoji">${it.emoji}</span>
-      <span class="tname">${it.drinkName}</span>
+      <span class="tname">${escapeHtml(it.drinkName)}</span>
       <span class="tqty">×${it.amount}</span>
     </div>`).join('');
   return `
     <div class="ticket">
-      <span class="pin"></span>
       <div class="ticket-num">#${o.id.slice(-5).toUpperCase()}</div>
       <div class="ticket-items">${itemsHtml}</div>
       ${o.opmerking ? `<div class="ticket-note">"${escapeHtml(o.opmerking)}"</div>` : ''}
@@ -395,7 +414,7 @@ function renderKeuken(){
             <span class="live-dot"></span>${state.connected ? 'LIVE — ' + openstaand + ' openstaand' : 'NIET VERBONDEN'}
           </span>
         </div>
-        ${CONFIG_IS_PLACEHOLDER ? configWarning() : `
+        ${(CONFIG_IS_PLACEHOLDER || firebaseInitError) ? configWarning() : `
           <div class="board">
             <div>
               <div class="column-head">
@@ -420,7 +439,7 @@ function renderKeuken(){
               </div>
             </div>
           </div>
-          <p style="margin-top:26px; font-size:12px; color:var(--text-dim);">
+          <p class="kitchen-hint">
             Zodra een bestelling op "✓ Klaar" wordt gezet, verschijnt hij bij de gast onder "Bereide bestellingen" om af te vinken als bezorgd.
           </p>`}
       </div>
@@ -431,10 +450,36 @@ function renderKeuken(){
 
 function render(){
   let html = '';
-  if(state.page === 'home') html = renderHome();
-  else if(state.page === 'bestellen') html = renderBestellen();
-  else if(state.page === 'keuken') html = renderKeuken();
-  app().innerHTML = `<div class="page-fade">${html}</div>`;
+  try{
+    if(state.page === 'home') html = renderHome();
+    else if(state.page === 'bestellen') html = renderBestellen();
+    else if(state.page === 'keuken') html = renderKeuken();
+    app().innerHTML = `<div class="page-fade">${html}</div>`;
+  }catch(e){
+    console.error('Renderfout:', e);
+    app().innerHTML = `
+      <div class="fatal-error">
+        <span class="icon">⚠️</span>
+        <h2 class="serif">Er ging iets mis</h2>
+        <p>De pagina kon niet worden getekend. Ververs de pagina, en controleer <code>config.js</code> als het probleem blijft terugkomen.</p>
+        <p><code>${escapeHtml(e.message || String(e))}</code></p>
+      </div>`;
+  }
 }
+
+/* Vangnet: als er ergens een onverwachte fout optreedt die niet is
+   afgevangen, blijft het scherm nooit leeg — er verschijnt altijd
+   een duidelijke melding in plaats van een zwart scherm. */
+window.addEventListener('error', (event) => {
+  if(app() && app().innerHTML.trim() === ''){
+    app().innerHTML = `
+      <div class="fatal-error">
+        <span class="icon">⚠️</span>
+        <h2 class="serif">Kon de site niet laden</h2>
+        <p>Er trad een scriptfout op. Controleer of alle bestanden (index.html, style.css, config.js, app.js) correct en onbeschadigd zijn geüpload.</p>
+        <p><code>${escapeHtml(event.message || 'Onbekende fout')}</code></p>
+      </div>`;
+  }
+});
 
 render();
