@@ -1,10 +1,12 @@
 /* ============================================================
-   CONFIGURATIE — Restaurant
-   Dit bestand bevat alleen technische instellingen: de naam
-   van je zaak en je Firebase-gegevens.
+   CONFIGURATIE — Restaurant Cuppen
+   ============================================================
+   Hier staan alleen de technische instellingen:
+     1. APP_NAME       — de naam boven de site
+     2. firebaseConfig — je Firebase-projectgegevens
 
-   Wil je de menukaart (dranken) aanpassen? Dat doe je in
-   products.js, niet hier.
+   Wil je het assortiment (de dranken) aanpassen? Dat doe je in
+   het aparte bestand products.js, niet hier.
    ============================================================ */
 
 // Naam van het restaurant, wordt boven de site getoond.
