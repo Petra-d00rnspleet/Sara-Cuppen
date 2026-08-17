@@ -20,6 +20,8 @@ const state = {
   connected: false,
   stock: {},             // { productId: true } — aanwezig én true betekent: uitverkocht
   stockConnected: false,
+  historyOrders: [],     // alle bezorgde bestellingen, voor de historiepagina
+  historyConnected: false,
 };
 
 let iceUidCounter = 0;
@@ -28,6 +30,7 @@ function makeIceUid(){ iceUidCounter += 1; return 'ice' + Date.now() + '_' + ice
 let kitchenListener = null;
 let readyListener = null;
 let stockListener = null;
+let historyListener = null;
 let db = null;
 let ordersRef = null;
 let CONFIG_IS_PLACEHOLDER = true;
@@ -117,6 +120,52 @@ function startStockListener(){
   });
 }
 
+/* ---------------- historie ---------------- */
+
+/* Blijft net als de voorraad-listener continu actief zodra hij één
+   keer is gestart, ongeacht welke pagina open staat — zo is het
+   badge-aantal altijd meteen up-to-date zonder heen-en-weer koppelen. */
+function startHistoryListener(){
+  if(!db || historyListener) return;
+  historyListener = db.ref('history').on('value', snapshot => {
+    const val = snapshot.val() || {};
+    state.historyOrders = Object.keys(val)
+      .map(key => ({ ...val[key], id: key }))
+      .sort((a,b) => (b.deliveredAt || b.timestamp) - (a.deliveredAt || a.timestamp));
+    state.historyConnected = true;
+    if(state.page === 'historie') render();
+  }, () => {
+    state.historyConnected = false;
+    if(state.page === 'historie') render();
+  });
+}
+
+/* Telt, per categorie, hoeveel stuks er in totaal in de historie
+   staan. Producten die inmiddels uit products.js zijn verwijderd
+   vallen terug onder "Overig" zodat er niets zoekraakt. */
+function historyCategoryTotals(){
+  const totals = {};
+  state.historyOrders.forEach(o => {
+    (o.items || []).forEach(it => {
+      const product = MENU.find(m => m.id === it.drinkId);
+      const catId = product ? product.category : 'overig';
+      totals[catId] = (totals[catId] || 0) + it.amount;
+    });
+  });
+  return totals;
+}
+
+async function resetHistory(){
+  if(!db) return;
+  if(!confirm('Weet je zeker dat je de hele historie wilt wissen? Dit kan niet ongedaan worden gemaakt.')) return;
+  try{
+    await db.ref('history').remove();
+    showToast('Historie gewist');
+  }catch(e){
+    showToast('Kon historie niet wissen, probeer opnieuw', true);
+  }
+}
+
 async function toggleStock(id){
   if(!db) return;
   const soldOut = isSoldOut(id);
@@ -171,6 +220,13 @@ function goVoorraad(){
   state.page = 'voorraad';
   render();
   startStockListener();
+}
+
+function goHistorie(){
+  stopListeners();
+  state.page = 'historie';
+  render();
+  startHistoryListener();
 }
 
 function goKeuken(){
@@ -316,9 +372,14 @@ async function submitOrder(){
 function markDelivered(orderId){
   const el = document.getElementById('ready-' + orderId);
   if(el) el.classList.add('leaving');
+  const order = state.readyOrders.find(o => o.id === orderId);
   setTimeout(async () => {
     if(!db) return;
     try{
+      if(order){
+        const { id, ...orderData } = order;
+        await db.ref('history/' + orderId).set({ ...orderData, deliveredAt: Date.now() });
+      }
       await db.ref('orders/' + orderId).remove();
     }catch(e){
       showToast('Kon niet als bezorgd markeren, probeer opnieuw', true);
@@ -362,6 +423,7 @@ function topbar(){
         <button class="${state.page==='bestellen'?'active':''}" onclick="goBestellen()">Bestellen</button>
         <button class="${state.page==='keuken'?'active':''}" onclick="goKeuken()">Keuken</button>
         <button class="${state.page==='voorraad'?'active':''}" onclick="goVoorraad()">Voorraad</button>
+        <button class="${state.page==='historie'?'active':''}" onclick="goHistorie()">Historie</button>
       </div>
     </div>`;
 }
@@ -417,6 +479,12 @@ function renderHome(){
             <h3>Voorraad</h3>
             <p>Zet producten op uitverkocht zodra ze op zijn — gasten zien dat meteen op de kaart.</p>
             <div class="go">Beheer voorraad →</div>
+          </div>
+          <div class="choice-card shimmer" onclick="goHistorie()" role="button" tabindex="0">
+            <span class="icon">🗂</span>
+            <h3>Historie</h3>
+            <p>Bekijk alle afgeronde bestellingen en zie hoeveel er per categorie is besteld.</p>
+            <div class="go">Bekijk historie →</div>
           </div>
         </div>
         ${configWarning()}
@@ -642,6 +710,62 @@ function renderVoorraad(){
     </main>`;
 }
 
+/* ---------------- render: historie ---------------- */
+
+function renderHistorie(){
+  const orders = state.historyOrders;
+  const totals = historyCategoryTotals();
+  const knownRows = CATEGORIES.filter(c => totals[c.id] > 0)
+    .map(c => ({ label: c.label, count: totals[c.id] }));
+  if(totals['overig'] > 0) knownRows.push({ label: 'Overig', count: totals['overig'] });
+  const grandTotal = knownRows.reduce((sum, r) => sum + r.count, 0);
+
+  return `
+    ${topbar()}
+    <main>
+      <div class="history-wrap">
+        <div class="heading">
+          <div class="eyebrow">Overzicht</div>
+          <h2 class="serif">Historie</h2>
+        </div>
+        ${ornament()}
+        <div class="history-top">
+          <span class="live-badge ${state.historyConnected ? '' : 'offline'}">
+            <span class="live-dot"></span>${state.historyConnected ? orders.length + ' bezorgd' : 'NIET VERBONDEN'}
+          </span>
+          ${orders.length > 0 ? `<button class="history-reset-btn" onclick="resetHistory()">Historie wissen</button>` : ''}
+        </div>
+        ${(CONFIG_IS_PLACEHOLDER || firebaseInitError) ? configWarning() : `
+          ${orders.length === 0
+            ? `<div class="empty-col history-empty">Nog geen afgeronde bestellingen</div>`
+            : `<div class="history-list">
+                ${orders.map(o => {
+                  const itemsLabel = (o.items || []).map(it => `${it.amount}× ${it.drinkName}${it.ice ? ' (' + (it.ice === 'met' ? 'met ijs' : 'zonder ijs') + ')' : ''}`).join(', ');
+                  return `
+                    <div class="history-row">
+                      <div class="history-items">${escapeHtml(itemsLabel)}</div>
+                      <div class="history-time">Bezorgd om ${timeLabel(o.deliveredAt || o.timestamp)}${o.opmerking ? ' · "' + escapeHtml(o.opmerking) + '"' : ''}</div>
+                    </div>`;
+                }).join('')}
+              </div>`}
+          ${grandTotal > 0 ? `
+            <div class="history-summary">
+              <div class="menu-category-title"><span class="cline"></span><span class="label">Totaal per categorie</span><span class="cline"></span></div>
+              ${knownRows.map(r => `
+                <div class="history-total-row">
+                  <span class="ht-label">${escapeHtml(r.label)}</span>
+                  <span class="ht-count">${r.count}</span>
+                </div>`).join('')}
+              <div class="history-total-row history-total-grand">
+                <span class="ht-label">Totaal</span>
+                <span class="ht-count">${grandTotal}</span>
+              </div>
+            </div>` : ''}
+        `}
+      </div>
+    </main>`;
+}
+
 /* ---------------- render ---------------- */
 
 function render(){
@@ -651,6 +775,7 @@ function render(){
     else if(state.page === 'bestellen') html = renderBestellen();
     else if(state.page === 'keuken') html = renderKeuken();
     else if(state.page === 'voorraad') html = renderVoorraad();
+    else if(state.page === 'historie') html = renderHistorie();
     app().innerHTML = `<div class="page-fade">${html}</div>`;
   }catch(e){
     console.error('Renderfout:', e);
