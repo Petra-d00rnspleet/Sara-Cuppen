@@ -7,20 +7,31 @@
    - emoji:    icoon op de kaart
    - category: bepaalt onder welk kopje het product staat
                (moet overeenkomen met een id uit CATEGORIES hieronder)
+   - orderable: optioneel, standaard true. Zet op false voor een
+               product dat wel op de voorraadpagina moet staan maar
+               niet zelf besteld kan worden (zoals "IJsklontjes"
+               hieronder — dat is een ingrediënt, geen drankje).
 
    Voeg een regel toe (of verwijder er een) om het aanbod te
    wijzigen — de rest van de site werkt dit automatisch bij.
    De VOLGORDE van CATEGORIES hieronder bepaalt de volgorde van de
-   kopjes op de bestel- en voorraadpagina (nu: Vlaai, Warme Dranken,
-   Frisdrank, Bier & Wijn). Binnen een categorie bepaalt de volgorde
-   in MENU de volgorde op de kaart.
+   kopjes op de bestel- en voorraadpagina. Binnen een categorie
+   bepaalt de volgorde in MENU de volgorde op de kaart.
+
+   IJSKLONTJES
+   Categorieën met "hasIce: true" krijgen automatisch een keuze
+   "met/zonder ijs" per apart drankje in de winkelwagen (nu alleen
+   bij "Frisdrank"). Zet het product "ijsklontjes" hieronder op
+   uitverkocht via de voorraadpagina om deze keuze overal tijdelijk
+   uit te schakelen — gasten bestellen dan gewoon zonder ijskeuze.
    ============================================================ */
 
 const CATEGORIES = [
   { id: "vlaai",       label: "Vlaai" },
   { id: "warme_drank", label: "Warme Dranken" },
-  { id: "drank",       label: "Frisdrank" },
+  { id: "drank",       label: "Frisdrank", hasIce: true },
   { id: "bier_wijn",   label: "Bier & Wijn" },
+  { id: "ijs",         label: "IJs" },
 ];
 
 const MENU = [
@@ -36,7 +47,7 @@ const MENU = [
   { id: "thee",           name: "Thee",              emoji: "☕", category: "warme_drank" },
   { id: "cappuccino",     name: "Cappuccino",        emoji: "☕", category: "warme_drank" },
 
-  // --- Dranken ---
+  // --- Dranken (hier geldt de ijskeuze) ---
   { id: "cola",           name: "Cola",              emoji: "🥤", category: "drank" },
   { id: "fanta",          name: "Fanta",             emoji: "🍊", category: "drank" },
   { id: "water",          name: "Water",             emoji: "💧", category: "drank" },
@@ -53,4 +64,7 @@ const MENU = [
   { id: "lindeboom",      name: "Lindeboom",         emoji: "🍻", category: "bier_wijn" },
   { id: "rose",           name: "Rosé",              emoji: "🍷", category: "bier_wijn" },
   { id: "wittewijn",      name: "Witte Wijn",        emoji: "🥂", category: "bier_wijn" },
+
+  // --- IJs (geen drankje — alleen te beheren via de voorraadpagina) ---
+  { id: "ijsklontjes",    name: "IJsklontjes",       emoji: "🧊", category: "ijs", orderable: false },
 ];
