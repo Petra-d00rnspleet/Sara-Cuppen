@@ -241,6 +241,19 @@ main{ flex:1; display:flex; flex-direction:column; }
 }
 .cart-item .ci-remove:hover{ color:var(--wine-soft); }
 
+.cart-item-ice{ flex-wrap:wrap; padding-bottom:8px; border-bottom:1px dashed var(--line-soft); }
+.cart-item-ice .ci-name{ flex:1 1 auto; }
+.ice-toggle{ display:flex; gap:6px; flex-shrink:0; }
+.ice-toggle button{
+  border:1px solid var(--line); background:var(--bg-elev-2); color:var(--text-dim);
+  font-family:'Inter'; font-size:11px; font-weight:600; letter-spacing:0.02em;
+  padding:6px 11px; border-radius:999px; cursor:pointer; transition:all .15s ease; white-space:nowrap;
+}
+.ice-toggle button:hover{ border-color:var(--copper); color:var(--copper-soft); }
+.ice-toggle button.active{ background:var(--copper); border-color:var(--copper); color:#1a0f05; }
+
+.ice-hint{ flex-shrink:0; font-size:13px; opacity:0.75; }
+
 .field-label{ font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--copper); margin-bottom:10px; display:block; }
 textarea{
   width:100%; background:var(--bg-elev-2); border:1px solid var(--line); border-radius:2px;
@@ -304,6 +317,10 @@ textarea:focus, .menu-row button:focus-visible, .choice-card:focus-visible, butt
 .ticket-item-row{ display:flex; align-items:center; gap:10px; }
 .ticket-item-row .emoji{ font-size:19px; width:24px; text-align:center; flex-shrink:0; }
 .ticket-item-row .tname{ flex:1; font-family:'Fraunces', serif; font-weight:600; font-size:15.5px; color:var(--cream); }
+.ticket-item-row .tname .tice{
+  display:block; font-family:'JetBrains Mono', monospace; font-weight:600; font-size:10.5px;
+  letter-spacing:0.04em; text-transform:uppercase; color:var(--copper-soft); margin-top:2px;
+}
 .ticket-item-row .tqty{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:13.5px; color:var(--copper); }
 .ticket-note{
   background:var(--bg-elev-2); border-left:2px solid var(--copper); border-radius:2px;
