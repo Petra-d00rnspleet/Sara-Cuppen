@@ -38,7 +38,7 @@ let firebaseInitError = null;
    config.js de rest van de site niet met zich meesleurt: de
    pagina's blijven altijd zichtbaar, met een duidelijke melding. */
 try{
-  CONFIG_IS_PLACEHOLDER = (typeof firebaseConfig === 'undefined') || firebaseConfig.apiKey === "JOUW_API_KEY";
+  CONFIG_IS_PLACEHOLDER = (typeof firebaseConfig === 'undefined') || firebaseConfig.apiKey === "AIzaSyDIlcs1YlMrcR2_Tzl1sSKTxQd9hWUZr6s";
   if(!CONFIG_IS_PLACEHOLDER){
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
