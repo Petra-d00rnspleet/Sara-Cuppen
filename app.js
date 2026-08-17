@@ -11,7 +11,8 @@
 
 const state = {
   page: 'home',          // 'home' | 'bestellen' | 'keuken' | 'voorraad'
-  cart: {},              // { drinkId: aantal }
+  cart: {},              // { drinkId: aantal } — voor producten zonder ijskeuze
+  iceCart: [],           // [{ uid, productId, ice: 'met'|'zonder' }] — één regel per drankje met ijskeuze
   orderOpmerking: '',
   showReady: false,      // toont/verbergt "Bereide bestellingen" paneel
   kitchenOrders: [],     // alle actieve bestellingen, voor de keukenpagina
@@ -20,6 +21,9 @@ const state = {
   stock: {},             // { productId: true } — aanwezig én true betekent: uitverkocht
   stockConnected: false,
 };
+
+let iceUidCounter = 0;
+function makeIceUid(){ iceUidCounter += 1; return 'ice' + Date.now() + '_' + iceUidCounter; }
 
 let kitchenListener = null;
 let readyListener = null;
@@ -79,6 +83,16 @@ function pulseElement(id){
 
 function isSoldOut(id){ return !!state.stock[id]; }
 
+/* Geeft true als dit product per stuk een "met/zonder ijs"-keuze
+   moet krijgen: de categorie moet hasIce hebben ingesteld in
+   products.js, én de ijsklontjes zelf mogen niet uitverkocht zijn. */
+function hasIceOption(product){
+  if(!product || product.orderable === false) return false;
+  const cat = CATEGORIES.find(c => c.id === product.category);
+  if(!cat || !cat.hasIce) return false;
+  return !isSoldOut('ijsklontjes');
+}
+
 function categorize(list){
   const groups = CATEGORIES.map(cat => ({
     id: cat.id,
@@ -131,6 +145,7 @@ function goBestellen(){
   stopListeners();
   state.page = 'bestellen';
   state.cart = {};
+  state.iceCart = [];
   state.orderOpmerking = '';
   state.showReady = false;
   render();
@@ -181,14 +196,28 @@ function goKeuken(){
 /* ---------------- bestellen: winkelwagen ---------------- */
 
 function cartCount(){
-  return Object.values(state.cart).reduce((sum, qty) => sum + qty, 0);
+  return Object.values(state.cart).reduce((sum, qty) => sum + qty, 0) + state.iceCart.length;
 }
 
-function cartItems(){
+function aggregateCartItems(){
   return Object.keys(state.cart).map(id => {
     const menuItem = MENU.find(m => m.id === id);
     return { drinkId: id, drinkName: menuItem.name, emoji: menuItem.emoji, amount: state.cart[id] };
   });
+}
+
+/* Elk drankje met een ijskeuze is een eigen regel (amount altijd 1),
+   zodat "2x cola" met verschillende ijskeuzes apart blijft staan:
+   cola met ijs, cola zonder ijs, ... */
+function iceCartItems(){
+  return state.iceCart.map(entry => {
+    const menuItem = MENU.find(m => m.id === entry.productId);
+    return { drinkId: entry.productId, drinkName: menuItem.name, emoji: menuItem.emoji, amount: 1, ice: entry.ice };
+  });
+}
+
+function cartItems(){
+  return [...aggregateCartItems(), ...iceCartItems()];
 }
 
 function addToCart(id, delta){
@@ -206,6 +235,43 @@ function addToCart(id, delta){
 
 function removeFromCart(id){
   delete state.cart[id];
+  render();
+}
+
+/* ---------------- bestellen: producten met ijskeuze ---------------- */
+
+function iceUnitCount(id){
+  return state.iceCart.filter(e => e.productId === id).length;
+}
+
+function addIceUnit(id){
+  if(isSoldOut(id)){
+    showToast('Dit product is uitverkocht', true);
+    return;
+  }
+  if(iceUnitCount(id) >= 20) return;
+  state.iceCart.push({ uid: makeIceUid(), productId: id, ice: 'met' });
+  render();
+  pulseElement('cartBadge');
+}
+
+function removeIceUnit(id){
+  for(let i = state.iceCart.length - 1; i >= 0; i--){
+    if(state.iceCart[i].productId === id){
+      state.iceCart.splice(i, 1);
+      break;
+    }
+  }
+  render();
+}
+
+function setIceChoice(uid, value){
+  const entry = state.iceCart.find(e => e.uid === uid);
+  if(entry){ entry.ice = value; render(); }
+}
+
+function removeIceEntry(uid){
+  state.iceCart = state.iceCart.filter(e => e.uid !== uid);
   render();
 }
 
@@ -236,6 +302,7 @@ async function submitOrder(){
     await ordersRef.push(order);
     showToast('Bestelling verzonden naar de keuken');
     state.cart = {};
+    state.iceCart = [];
     state.orderOpmerking = '';
     render();
   }catch(e){
@@ -367,7 +434,7 @@ function renderReadyPanel(){
       ${orders.length === 0
         ? `<div class="ready-empty">Nog geen bestellingen klaar om te bezorgen</div>`
         : orders.map(o => {
-            const itemsLabel = o.items.map(it => `${it.amount}× ${it.drinkName}`).join(', ');
+            const itemsLabel = o.items.map(it => `${it.amount}× ${it.drinkName}${it.ice ? ' (' + (it.ice === 'met' ? 'met ijs' : 'zonder ijs') + ')' : ''}`).join(', ');
             return `
               <div class="ready-card" id="ready-${o.id}">
                 <div class="ready-info">
@@ -404,22 +471,31 @@ function renderBestellen(){
         ${renderReadyPanel()}
 
         <div class="menu-list">
-          ${categorize(MENU).map(group => `
+          ${categorize(MENU.filter(p => p.orderable !== false)).map(group => `
             <div class="menu-category">
               <div class="menu-category-title"><span class="cline"></span><span class="label">${escapeHtml(group.label)}</span><span class="cline"></span></div>
               ${group.items.map(d => {
                 const soldOut = isSoldOut(d.id);
+                const withIce = hasIceOption(d);
+                const qty = withIce ? iceUnitCount(d.id) : (state.cart[d.id] || 0);
+                const stepperMinus = withIce
+                  ? `onclick="removeIceUnit('${d.id}')" ${qty === 0 ? 'disabled' : ''}`
+                  : `onclick="addToCart('${d.id}', -1)" ${!(state.cart[d.id]) ? 'disabled' : ''}`;
+                const stepperPlus = withIce
+                  ? `onclick="addIceUnit('${d.id}')"`
+                  : `onclick="addToCart('${d.id}', 1)"`;
                 return `
                 <div class="menu-row ${soldOut ? 'sold-out' : ''}">
                   <span class="emoji">${d.emoji}</span>
                   <span class="name serif">${escapeHtml(d.name)}</span>
+                  ${withIce ? `<span class="ice-hint" title="Ijskeuze per drankje in de winkelwagen">🧊</span>` : ''}
                   <span class="leader"></span>
                   ${soldOut
                     ? `<span class="sold-out-badge">Uitverkocht</span>`
                     : `<div class="row-stepper">
-                        <button onclick="addToCart('${d.id}', -1)" ${!(state.cart[d.id]) ? 'disabled' : ''} aria-label="Minder">−</button>
-                        <span class="rs-qty">${state.cart[d.id] || 0}</span>
-                        <button onclick="addToCart('${d.id}', 1)" aria-label="Meer">+</button>
+                        <button ${stepperMinus} aria-label="Minder">−</button>
+                        <span class="rs-qty">${qty}</span>
+                        <button ${stepperPlus} aria-label="Meer">+</button>
                       </div>`}
                 </div>`;
               }).join('')}
@@ -436,6 +512,18 @@ function renderBestellen(){
                   <span class="ci-qty">×${it.amount}</span>
                   <button class="ci-remove" onclick="removeFromCart('${it.drinkId}')" aria-label="Verwijderen">✕</button>
                 </div>`).join('')}
+              ${state.iceCart.map(entry => {
+                const menuItem = MENU.find(m => m.id === entry.productId);
+                return `
+                <div class="cart-item cart-item-ice">
+                  <span class="ci-name">${menuItem.emoji} ${escapeHtml(menuItem.name)}</span>
+                  <div class="ice-toggle">
+                    <button class="${entry.ice === 'met' ? 'active' : ''}" onclick="setIceChoice('${entry.uid}','met')">Met ijs</button>
+                    <button class="${entry.ice === 'zonder' ? 'active' : ''}" onclick="setIceChoice('${entry.uid}','zonder')">Zonder ijs</button>
+                  </div>
+                  <button class="ci-remove" onclick="removeIceEntry('${entry.uid}')" aria-label="Verwijderen">✕</button>
+                </div>`;
+              }).join('')}
             </div>
             <span class="field-label">Opmerking (optioneel)</span>
             <textarea placeholder="bv. extra ijs, geen rietje..." oninput="onOpmerkingInput(this)">${escapeHtml(state.orderOpmerking)}</textarea>
@@ -456,7 +544,7 @@ function ticketHtml(o, kind){
   const itemsHtml = (o.items || []).map(it => `
     <div class="ticket-item-row">
       <span class="emoji">${it.emoji}</span>
-      <span class="tname">${escapeHtml(it.drinkName)}</span>
+      <span class="tname">${escapeHtml(it.drinkName)}${it.ice ? `<span class="tice">${it.ice === 'met' ? 'met ijs' : 'zonder ijs'}</span>` : ''}</span>
       <span class="tqty">×${it.amount}</span>
     </div>`).join('');
   return `
