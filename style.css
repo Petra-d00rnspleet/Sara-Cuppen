@@ -360,6 +360,41 @@ textarea:focus, .menu-row button:focus-visible, .choice-card:focus-visible, butt
 .stock-toggle.is-sold-out{ border-color:var(--wine-soft); color:var(--wine-soft); }
 .stock-toggle.is-sold-out:hover{ background:var(--wine-soft); color:#1a0a0c; }
 
+/* ---------- HISTORIE ---------- */
+.history-wrap{ flex:1; display:flex; flex-direction:column; align-items:center; padding:44px 20px 70px; }
+.history-top{
+  width:100%; max-width:560px; display:flex; align-items:center; justify-content:space-between;
+  gap:14px; margin-bottom:28px; flex-wrap:wrap;
+}
+.history-reset-btn{
+  padding:9px 16px; border-radius:999px; border:1px solid var(--wine-soft); background:transparent;
+  color:var(--wine-soft); font-family:'Inter'; font-size:11.5px; font-weight:700; letter-spacing:0.05em;
+  text-transform:uppercase; cursor:pointer; transition:all .15s ease;
+}
+.history-reset-btn:hover{ background:var(--wine-soft); color:#1a0a0c; }
+
+.history-empty{ width:100%; max-width:560px; }
+
+.history-list{ width:100%; max-width:560px; display:flex; flex-direction:column; gap:10px; }
+.history-row{
+  padding:14px 16px; background:var(--bg-elev); border:1px solid var(--line); border-radius:3px;
+}
+.history-row .history-items{ font-family:'Fraunces'; font-weight:600; font-size:14.5px; color:var(--cream); }
+.history-row .history-time{ font-size:11px; color:var(--text-dim); margin-top:4px; font-family:'JetBrains Mono', monospace; }
+
+.history-summary{ width:100%; max-width:560px; margin-top:38px; }
+.history-total-row{
+  display:flex; align-items:center; justify-content:space-between; padding:11px 6px;
+  border-bottom:1px solid var(--line-soft); font-size:14px; color:var(--text);
+}
+.history-total-row .ht-label{ font-family:'Fraunces', serif; font-weight:600; }
+.history-total-row .ht-count{ font-family:'JetBrains Mono', monospace; font-weight:700; color:var(--copper); }
+.history-total-row.history-total-grand{
+  border-bottom:none; border-top:1px solid var(--copper); margin-top:6px; padding-top:16px;
+}
+.history-total-row.history-total-grand .ht-label{ color:var(--cream); font-size:15.5px; }
+.history-total-row.history-total-grand .ht-count{ color:var(--copper-soft); font-size:15.5px; }
+
 .config-warning{
   max-width:560px; margin:24px auto 0; background:var(--bg-elev-2); border:1px solid var(--wine-soft);
   border-radius:2px; padding:18px 20px; font-size:13px; line-height:1.6; color:var(--text-dim);
@@ -383,4 +418,5 @@ textarea:focus, .menu-row button:focus-visible, .choice-card:focus-visible, butt
   .pill-nav button{ padding:8px 13px; font-size:11px; }
   .cart-card{ padding:22px 18px; }
   .kitchen-wrap{ padding:24px 18px 50px; }
+  .history-wrap{ padding:24px 18px 50px; }
 }
