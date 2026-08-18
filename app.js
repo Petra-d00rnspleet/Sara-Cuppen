@@ -74,6 +74,24 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
+/* ---------------- meldingsgeluid ----------------
+   Speelt melding geluid.mp3 (moet in dezelfde map staan als
+   index.html) af zodra er, terwijl deze pagina al open staat, een
+   nieuwe bestelling in de keuken binnenkomt of een bestelling klaar
+   wordt gemeld. Bij het eerste openen van de pagina (of bij een
+   volledige her-lading van de lijst) klinkt er niets — alleen bij
+   een wijziging die je live meemaakt. */
+const notificationAudio = new Audio(encodeURI('melding geluid.mp3'));
+let knownNewOrderIds = null;   // null = nog niet geïnitialiseerd voor deze sessie op de keukenpagina
+let knownReadyOrderIds = null; // null = nog niet geïnitialiseerd voor deze sessie op de bestelpagina
+
+function playNotificationSound(){
+  try{
+    notificationAudio.currentTime = 0;
+    notificationAudio.play().catch(()=>{ /* browser blokkeert geluid zonder eerdere klik, negeren */ });
+  }catch(e){}
+}
+
 function pulseElement(id){
   const el = document.getElementById(id);
   if(!el) return;
@@ -197,6 +215,7 @@ function goBestellen(){
   state.iceCart = [];
   state.orderOpmerking = '';
   state.showReady = false;
+  knownReadyOrderIds = null;
   render();
   startStockListener();
   if(!ordersRef) return;
@@ -207,6 +226,11 @@ function goBestellen(){
       .map(key => ({ ...val[key], id: key }))
       .filter(o => o.status === 'klaar')
       .sort((a,b) => a.timestamp - b.timestamp);
+    const currentReadyIds = new Set(state.readyOrders.map(o => o.id));
+    if(knownReadyOrderIds !== null && [...currentReadyIds].some(id => !knownReadyOrderIds.has(id))){
+      playNotificationSound();
+    }
+    knownReadyOrderIds = currentReadyIds;
     state.connected = true;
     render();
   }, () => {
@@ -232,6 +256,7 @@ function goHistorie(){
 function goKeuken(){
   stopListeners();
   state.page = 'keuken';
+  knownNewOrderIds = null;
   render();
   if(!ordersRef) return;
 
@@ -240,6 +265,11 @@ function goKeuken(){
     state.kitchenOrders = Object.keys(val)
       .map(key => ({ ...val[key], id: key }))
       .sort((a,b) => a.timestamp - b.timestamp);
+    const currentNewIds = new Set(state.kitchenOrders.filter(o => o.status === 'nieuw').map(o => o.id));
+    if(knownNewOrderIds !== null && [...currentNewIds].some(id => !knownNewOrderIds.has(id))){
+      playNotificationSound();
+    }
+    knownNewOrderIds = currentNewIds;
     state.connected = true;
     render();
   }, () => {
