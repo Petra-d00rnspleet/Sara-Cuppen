@@ -36,7 +36,7 @@ const CATEGORIES = [
 
 const MENU = [
   // --- Vlaai ---
-  { id: "appellinzenvlaai",     name: "Appellinzenvlaai",        emoji: "🍰", category: "vlaai" },
+  { id: "appellinzenvlaai",     name: "Appel Linzenvlaai",        emoji: "🍰", category: "vlaai" },
   { id: "boterkersenvlaai",     name: "Boterkersenvlaai",        emoji: "🍰", category: "vlaai" },
   { id: "aardbeienvlaai",       name: "Aardbeienvlaai",          emoji: "🍰", category: "vlaai" },
   { id: "rijstenvlaai",         name: "Rijstenvlaai",            emoji: "🍰", category: "vlaai" },
