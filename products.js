@@ -36,34 +36,37 @@ const CATEGORIES = [
 
 const MENU = [
   // --- Vlaai ---
-  { id: "appelvlaai",     name: "Appelvlaai",        emoji: "🍰", category: "vlaai" },
-  { id: "botervlaai",     name: "Botervlaai",        emoji: "🍰", category: "vlaai" },
-  { id: "aardbeienvlaai", name: "Aardbeienvlaai",    emoji: "🍰", category: "vlaai" },
-  { id: "rijstenvlaai",   name: "Rijstenvlaai",      emoji: "🍰", category: "vlaai" },
-  { id: "kersenvlaai",    name: "Kersenvlaai",       emoji: "🍰", category: "vlaai" },
+  { id: "appellinzenvlaai",     name: "Appellinzenvlaai",        emoji: "🍰", category: "vlaai" },
+  { id: "boterkersenvlaai",     name: "Boterkersenvlaai",        emoji: "🍰", category: "vlaai" },
+  { id: "aardbeienvlaai",       name: "Aardbeienvlaai",          emoji: "🍰", category: "vlaai" },
+  { id: "rijstenvlaai",         name: "Rijstenvlaai",            emoji: "🍰", category: "vlaai" },
+  { id: "abrikozenvlaai",       name: "Abrikozenvlaai",          emoji: "🍰", category: "vlaai" },
 
   // --- Warme Dranken ---
   { id: "koffie",         name: "Koffie",            emoji: "☕", category: "warme_drank" },
   { id: "thee",           name: "Thee",              emoji: "☕", category: "warme_drank" },
-  { id: "cappuccino",     name: "Cappuccino",        emoji: "☕", category: "warme_drank" },
 
   // --- Dranken (hier geldt de ijskeuze) ---
   { id: "cola",           name: "Cola",              emoji: "🥤", category: "drank" },
-  { id: "fanta",          name: "Fanta",             emoji: "🍊", category: "drank" },
   { id: "water",          name: "Water",             emoji: "💧", category: "drank" },
-  { id: "sparood",        name: "Spa Rood",          emoji: "💧", category: "drank" },
+  { id: "crystalclearap", name: "Crystal clear Appel/Peer", emoji: "🍎", category: "drank" },
+  { id: "crystalcleara",  name: "Crystal clear Aardbeien", emoji: "🍓", category: "drank" },
+  { id: "crystalclearc",  name: "Crystal clear Citroen", emoji: "🍋", category: "drank" },
   { id: "iceteag",        name: "Ice Tea Green",     emoji: "🥤", category: "drank" },
   { id: "iceteas",        name: "Ice Tea Sparkling", emoji: "🥤", category: "drank" },
   { id: "appelsap",       name: "Appelsap",          emoji: "🍎", category: "drank" },
   { id: "ranja",          name: "Ranja",             emoji: "🧃", category: "drank" },
 
   // --- Bier & Wijn ---
-  { id: "radler0",        name: "Radler 0.0%",       emoji: "🍺", category: "bier_wijn" },
-  { id: "hertogjan",      name: "Hertog Jan",        emoji: "🍻", category: "bier_wijn" },
-  { id: "weizener",       name: "Weizener",          emoji: "🍺", category: "bier_wijn" },
-  { id: "lindeboom",      name: "Lindeboom",         emoji: "🍻", category: "bier_wijn" },
-  { id: "rose",           name: "Rosé",              emoji: "🍷", category: "bier_wijn" },
-  { id: "wittewijn",      name: "Witte Wijn",        emoji: "🥂", category: "bier_wijn" },
+  { id: "radler0",        name: "Radler 0.0%",          emoji: "🍺", category: "bier_wijn" },
+  { id: "radlerc",        name: "Radler Citroen",       emoji: "🍺", category: "bier_wijn" },
+  { id: "hertogjan",      name: "Hertog Jan",           emoji: "🍻", category: "bier_wijn" },
+  { id: "hertogjana",     name: "Hertogjan Alcolvrij",  emoji: "🍺", category: "bier_wijn" },
+  { id: "liefmans",       name: "Liefmans",             emoji: "🍻", category: "bier_wijn" },    
+  { id: "speciaalbier",   name: "Speciaal Bier",        emoji: "🍻", category: "bier_wijn" },
+  { id: "classicwijn",    name: "Classic Wijn",         emoji: "🍾", category: "bier_wijn" },
+  { id: "rose",           name: "Rosé",                 emoji: "🍷", category: "bier_wijn" },
+  { id: "wittewijn",      name: "Witte Wijn",           emoji: "🥂", category: "bier_wijn" },
 
   // --- IJs (geen drankje — alleen te beheren via de voorraadpagina) ---
   { id: "ijsklontjes",    name: "IJsklontjes",       emoji: "🧊", category: "ijs", orderable: false },
